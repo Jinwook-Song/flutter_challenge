@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 void main() {
@@ -13,214 +15,307 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
         brightness: Brightness.dark,
-        appBarTheme: AppBarTheme(
-          color: Colors.grey.shade900,
+        appBarTheme: const AppBarTheme(
+          color: Colors.amber,
           elevation: 0,
         ),
-        scaffoldBackgroundColor: Colors.grey.shade900,
+        scaffoldBackgroundColor: Colors.amber,
       ),
       home: const MyWidget(),
     );
   }
 }
 
-class MyWidget extends StatelessWidget {
+class MyWidget extends StatefulWidget {
   const MyWidget({super.key});
 
-  static const _days = [
-    'TODAY',
-    '•',
-    '17',
-    '18',
-    '19',
-    '20',
-    '21',
-    '22',
-    '23',
-    '24',
-    '25',
-    '26',
-    '27',
-    '28',
-    '29',
-    '30',
-  ];
+  static const timesetList = [15, 20, 25, 30, 35];
+
+  @override
+  State<MyWidget> createState() => _MyWidgetState();
+}
+
+class _MyWidgetState extends State<MyWidget> {
+  int _selectedTimeset = 25;
+  int _totalSec = 25 * 60;
+  int _finishedRound = 0;
+  int _finishedGoal = 0;
+  bool _isRunning = false;
+  bool _isBreaking = false;
+  int _totalBreakSec = 5 * 60;
+
+  late Timer _timer;
+  late Timer _breakTimer;
+
+  void _handleStart() {
+    _timer = Timer.periodic(
+      const Duration(milliseconds: 10),
+      _handleTick,
+    );
+    _isRunning = true;
+    setState(() {});
+  }
+
+  void _handlePause() {
+    _timer.cancel();
+    _isRunning = false;
+    setState(() {});
+  }
+
+  void _resetTimer() {
+    _totalSec = _selectedTimeset * 60;
+    setState(() {});
+  }
+
+  void _handleTimeSet(int timeset) {
+    if (_isRunning) return;
+    _selectedTimeset = timeset;
+    _totalSec = timeset * 60;
+    setState(() {});
+  }
+
+  void _handleTick(Timer timer) {
+    if (_totalSec == 0) {
+      _isRunning = false;
+      _totalSec = _selectedTimeset * 60;
+      if (_finishedRound == 4) {
+        _finishedRound = 0;
+        _finishedGoal++;
+      } else {
+        _finishedRound++;
+      }
+      _startBreakTime();
+      timer.cancel();
+    } else {
+      _totalSec--;
+    }
+    setState(() {});
+  }
+
+  void _startBreakTime() {
+    _isBreaking = true;
+    _breakTimer = Timer.periodic(
+      const Duration(milliseconds: 10),
+      _handleBreakTick,
+    );
+  }
+
+  void _handleBreakTick(Timer timer) {
+    if (_totalBreakSec == 0) {
+      _isBreaking = false;
+      _totalBreakSec = 5 * 60;
+      _breakTimer.cancel();
+    } else {
+      _totalBreakSec--;
+    }
+    setState(() {});
+  }
+
+  String getRemainedMinutes(int seconds) {
+    var duration = Duration(seconds: seconds);
+    return duration.toString().split('.').first.substring(2, 4);
+  }
+
+  String getRemainedSeconds(int seconds) {
+    var duration = Duration(seconds: seconds);
+    return duration.toString().split('.').first.substring(5);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const CircleAvatar(
-                    radius: 28,
-                    foregroundImage: NetworkImage(
-                      'https://avatars.githubusercontent.com/u/78011042?v=4',
-                    ),
-                  ),
-                  trailing: IconButton(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.add,
-                      size: 36,
-                    ),
-                  ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(36.0),
+          child: Column(
+            children: [
+              Text(
+                _isBreaking ? 'Take a break~' : 'POMOTIMER',
+                style: const TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.w600,
                 ),
-                const SizedBox(height: 24),
-                const Text('MONDAY 16'),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: MediaQuery.of(context).size.width,
-                  height: 36,
-                  child: ListView.separated(
-                    itemCount: _days.length,
-                    scrollDirection: Axis.horizontal,
-                    itemBuilder: (context, index) {
-                      return Text(
-                        _days[index],
-                        style: TextStyle(
-                          fontSize: 36,
-                          color: index == 0
-                              ? Colors.white
-                              : index == 1
-                                  ? Colors.pink.shade700
-                                  : Colors.white.withOpacity(0.4),
+              ),
+              const SizedBox(height: 80),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 200,
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8)),
+                        child: Center(
+                          child: Text(
+                            getRemainedMinutes(
+                              _isBreaking ? _totalBreakSec : _totalSec,
+                            ),
+                            style: const TextStyle(
+                              color: Colors.amber,
+                              fontSize: 80,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                      );
-                    },
-                    separatorBuilder: (context, index) {
-                      return const SizedBox(width: 20);
-                    },
-                  ),
-                ),
-                const SizedBox(height: 30),
-                Column(
-                  children: const [
-                    Card(
-                      date: ['11', '30', '12', '20'],
-                      title: 'DESIGN\nMEETING',
-                      people: ['ALEX', 'HELENA', 'NANA'],
-                      color: Color.fromARGB(255, 249, 232, 47),
+                      ),
                     ),
-                    SizedBox(height: 12),
-                    Card(
-                      date: ['12', '35', '14', '10'],
-                      title: 'DAILY\nPROJECT',
-                      people: ['ME', 'RICHARD', 'CIRY', '+4'],
-                      color: Color.fromARGB(255, 218, 129, 233),
+                    SizedBox(
+                      width: 36,
+                      child: Center(
+                        child: Opacity(
+                          opacity: 0.8,
+                          child: Text(
+                            ':',
+                            style: TextStyle(
+                                fontSize: 48,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.amber.shade50),
+                          ),
+                        ),
+                      ),
                     ),
-                    SizedBox(height: 12),
-                    Card(
-                      date: ['15', '00', '16', '30'],
-                      title: 'WEEKLY\nPLANNING',
-                      people: ['DEN', 'NICO', 'JW'],
-                      color: Color.fromARGB(255, 132, 254, 136),
+                    Expanded(
+                      child: Container(
+                        height: 200,
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8)),
+                        child: Center(
+                          child: Text(
+                            getRemainedSeconds(
+                              _isBreaking ? _totalBreakSec : _totalSec,
+                            ),
+                            style: const TextStyle(
+                              color: Colors.amber,
+                              fontSize: 80,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                    SizedBox(height: 12),
                   ],
-                )
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class Card extends StatelessWidget {
-  final List<String> date;
-  final String title;
-  final List<String> people;
-  final Color color;
-
-  const Card({
-    Key? key,
-    required this.date,
-    required this.title,
-    required this.people,
-    required this.color,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTextStyle(
-      style: const TextStyle(color: Colors.black),
-      child: Container(
-        height: 200,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(40),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              left: 20,
-              top: 30,
-              child: Column(
+                ),
+              ),
+              const SizedBox(height: 48),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    date[0],
-                    style: const TextStyle(
-                      fontSize: 20,
+                  for (var timeset in MyWidget.timesetList) ...[
+                    Expanded(
+                      child: Opacity(
+                        opacity: _isRunning ? 0.3 : 1,
+                        child: GestureDetector(
+                          onTap: () => _handleTimeSet(timeset),
+                          child: Container(
+                            height: 48,
+                            decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Colors.amber.shade200,
+                                  width: 2,
+                                ),
+                                color: timeset == _selectedTimeset
+                                    ? Colors.white
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(8)),
+                            child: Center(
+                              child: Text(
+                                '$timeset',
+                                style: TextStyle(
+                                  color: timeset == _selectedTimeset
+                                      ? Colors.amber
+                                      : Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  Text(
-                    date[1],
-                  ),
-                  const Text(
-                    '|',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w100,
-                    ),
-                  ),
-                  Text(
-                    date[2],
-                    style: const TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
-                  Text(
-                    date[3],
-                  ),
+                    if (timeset != MyWidget.timesetList.last)
+                      const SizedBox(
+                        width: 12,
+                      )
+                  ]
                 ],
               ),
-            ),
-            Positioned.fill(
-              left: 60,
-              top: 36,
-              child: Text(
-                title,
+              const SizedBox(height: 80),
+              _isBreaking
+                  ? IconButton(
+                      onPressed: () {},
+                      iconSize: 120,
+                      icon: const Icon(
+                        Icons.airline_seat_recline_extra,
+                      ),
+                    )
+                  : Row(
+                      children: [
+                        const Spacer(),
+                        IconButton(
+                          iconSize: 120,
+                          onPressed: _isRunning
+                              ? () => _handlePause()
+                              : () => _handleStart(),
+                          icon: Icon(
+                            _isRunning ? Icons.pause_circle : Icons.play_circle,
+                          ),
+                        ),
+                        _isRunning
+                            ? const Spacer()
+                            : Expanded(
+                                child: IconButton(
+                                  iconSize: 48,
+                                  onPressed: _resetTimer,
+                                  icon: const Icon(Icons.restore),
+                                ),
+                              ),
+                      ],
+                    ),
+              const SizedBox(height: 40),
+              DefaultTextStyle(
                 style: const TextStyle(
-                  fontSize: 60,
-                  letterSpacing: -1,
-                  height: 0.8,
-                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
                 ),
-              ),
-            ),
-            DefaultTextStyle(
-              style: TextStyle(color: Colors.grey.shade700),
-              child: Positioned(
-                  left: 80,
-                  bottom: 20,
-                  child: Row(
-                    children: [
-                      for (var person in people) ...[
-                        Text(person),
-                        const SizedBox(width: 24)
-                      ]
-                    ],
-                  )),
-            )
-          ],
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Column(
+                      children: [
+                        Text(
+                          '$_finishedRound/4',
+                          style: TextStyle(
+                            color: Colors.amber.shade100,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'ROUND',
+                        ),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        Text(
+                          '$_finishedGoal/12',
+                          style: TextStyle(
+                            color: Colors.amber.shade100,
+                          ),
+                        ),
+                        const Text('GOAL'),
+                      ],
+                    ),
+                  ],
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );
