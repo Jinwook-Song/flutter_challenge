@@ -1,9 +1,81 @@
-import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(const MyApp());
+}
+
+class ColorPalette {
+  static const white = Color(0xFFFFFFFF);
+  static const green = Color(0xFF249f9c);
+  static const accentGreen = Color(0xFF037a76);
+  static const pink = Color(0xFFf44786);
+  static const accentPink = Color(0xFFed1b76);
+}
+
+class MovieModel {
+  final adult,
+      backdrop_path,
+      genre_ids,
+      id,
+      original_language,
+      original_title,
+      overview,
+      popularity,
+      poster_path,
+      release_date,
+      title,
+      video,
+      vote_average,
+      vote_count;
+
+  // named constructor
+  MovieModel.fromJson(Map<String, dynamic> json)
+      : adult = json['adult'],
+        backdrop_path = json['backdrop_path'],
+        genre_ids = json['genre_ids'],
+        id = json['id'],
+        original_language = json['original_language'],
+        original_title = json['original_title'],
+        overview = json['overview'],
+        popularity = json['popularity'],
+        poster_path = json['poster_path'],
+        release_date = json['release_date'],
+        title = json['title'],
+        video = json['video'],
+        vote_average = json['vote_average'],
+        vote_count = json['vote_count'];
+}
+
+class MovieType {
+  static const String popular = "popular";
+  static const String nowPlaying = "now-playing";
+  static const String comingSoon = "coming-soon";
+}
+
+class ApiService {
+  static const String baseUrl = "https://movies-api.nomadcoders.workers.dev";
+
+  static Future<List<MovieModel>> getMovies(String kind) async {
+    List<MovieModel> moviesInstance = [];
+
+    final url = Uri.parse('$baseUrl/$kind');
+    print(url);
+
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseJson = jsonDecode(response.body);
+      final List<dynamic> movies = responseJson['results'];
+      for (var movie in movies) {
+        moviesInstance.add(MovieModel.fromJson(movie));
+      }
+      return moviesInstance;
+    }
+    throw Error();
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -15,11 +87,7 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
         brightness: Brightness.dark,
-        appBarTheme: const AppBarTheme(
-          color: Colors.amber,
-          elevation: 0,
-        ),
-        scaffoldBackgroundColor: Colors.amber,
+        scaffoldBackgroundColor: (ColorPalette.green),
       ),
       home: const MyWidget(),
     );
@@ -29,295 +97,145 @@ class MyApp extends StatelessWidget {
 class MyWidget extends StatefulWidget {
   const MyWidget({super.key});
 
-  static const timesetList = [15, 20, 25, 30, 35];
-
   @override
   State<MyWidget> createState() => _MyWidgetState();
 }
 
 class _MyWidgetState extends State<MyWidget> {
-  int _selectedTimeset = 25;
-  int _totalSec = 25 * 60;
-  int _finishedRound = 0;
-  int _finishedGoal = 0;
-  bool _isRunning = false;
-  bool _isBreaking = false;
-  int _totalBreakSec = 5 * 60;
+  late final Future<List<MovieModel>> popularMovies;
+  late final Future<List<MovieModel>> nowPlayingMovies;
+  late final Future<List<MovieModel>> comingSoonMovies;
 
-  late Timer _timer;
-  late Timer _breakTimer;
-
-  void _handleStart() {
-    _timer = Timer.periodic(
-      const Duration(milliseconds: 10),
-      _handleTick,
-    );
-    _isRunning = true;
-    setState(() {});
+  @override
+  void initState() {
+    super.initState();
+    popularMovies = ApiService.getMovies(MovieType.popular);
+    nowPlayingMovies = ApiService.getMovies(MovieType.nowPlaying);
+    comingSoonMovies = ApiService.getMovies(MovieType.comingSoon);
   }
 
-  void _handlePause() {
-    _timer.cancel();
-    _isRunning = false;
-    setState(() {});
-  }
-
-  void _resetTimer() {
-    _totalSec = _selectedTimeset * 60;
-    setState(() {});
-  }
-
-  void _handleTimeSet(int timeset) {
-    if (_isRunning) return;
-    _selectedTimeset = timeset;
-    _totalSec = timeset * 60;
-    setState(() {});
-  }
-
-  void _handleTick(Timer timer) {
-    if (_totalSec == 0) {
-      _isRunning = false;
-      _totalSec = _selectedTimeset * 60;
-      if (_finishedRound == 4) {
-        _finishedRound = 0;
-        _finishedGoal++;
-      } else {
-        _finishedRound++;
-      }
-      _startBreakTime();
-      timer.cancel();
-    } else {
-      _totalSec--;
-    }
-    setState(() {});
-  }
-
-  void _startBreakTime() {
-    _isBreaking = true;
-    _breakTimer = Timer.periodic(
-      const Duration(milliseconds: 10),
-      _handleBreakTick,
-    );
-  }
-
-  void _handleBreakTick(Timer timer) {
-    if (_totalBreakSec == 0) {
-      _isBreaking = false;
-      _totalBreakSec = 5 * 60;
-      _breakTimer.cancel();
-    } else {
-      _totalBreakSec--;
-    }
-    setState(() {});
-  }
-
-  String getRemainedMinutes(int seconds) {
-    var duration = Duration(seconds: seconds);
-    return duration.toString().split('.').first.substring(2, 4);
-  }
-
-  String getRemainedSeconds(int seconds) {
-    var duration = Duration(seconds: seconds);
-    return duration.toString().split('.').first.substring(5);
-  }
-
+  static const movies = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(36.0),
-          child: Column(
-            children: [
-              Text(
-                _isBreaking ? 'Take a break~' : 'POMOTIMER',
-                style: const TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.w600,
-                ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: DefaultTextStyle(
+              style: const TextStyle(
+                color: ColorPalette.accentPink,
+                fontWeight: FontWeight.w600,
               ),
-              const SizedBox(height: 80),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        height: 200,
-                        decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8)),
-                        child: Center(
-                          child: Text(
-                            getRemainedMinutes(
-                              _isBreaking ? _totalBreakSec : _totalSec,
-                            ),
-                            style: const TextStyle(
-                              color: Colors.amber,
-                              fontSize: 80,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 36,
-                      child: Center(
-                        child: Opacity(
-                          opacity: 0.8,
-                          child: Text(
-                            ':',
-                            style: TextStyle(
-                                fontSize: 48,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.amber.shade50),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        height: 200,
-                        decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8)),
-                        child: Center(
-                          child: Text(
-                            getRemainedSeconds(
-                              _isBreaking ? _totalBreakSec : _totalSec,
-                            ),
-                            style: const TextStyle(
-                              color: Colors.amber,
-                              fontSize: 80,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 48),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (var timeset in MyWidget.timesetList) ...[
-                    Expanded(
-                      child: Opacity(
-                        opacity: _isRunning ? 0.3 : 1,
-                        child: GestureDetector(
-                          onTap: () => _handleTimeSet(timeset),
-                          child: Container(
-                            height: 48,
-                            decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: Colors.amber.shade200,
-                                  width: 2,
-                                ),
-                                color: timeset == _selectedTimeset
-                                    ? Colors.white
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(8)),
-                            child: Center(
-                              child: Text(
-                                '$timeset',
-                                style: TextStyle(
-                                  color: timeset == _selectedTimeset
-                                      ? Colors.amber
-                                      : Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                  const Text(
+                    '● Popular Movies',
+                    style: TextStyle(
+                      fontSize: 30,
                     ),
-                    if (timeset != MyWidget.timesetList.last)
-                      const SizedBox(
-                        width: 12,
-                      )
-                  ]
+                  ),
+                  const SizedBox(height: 24),
+                  makeMovies(
+                    movies: popularMovies,
+                    aspectRatio: 16 / 9,
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    '▲ Now in Cinemas',
+                    style: TextStyle(
+                      fontSize: 30,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  makeMovies(
+                    movies: nowPlayingMovies,
+                    aspectRatio: 1,
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    '■ Comming soon',
+                    style: TextStyle(
+                      fontSize: 30,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  makeMovies(
+                    movies: comingSoonMovies,
+                    aspectRatio: 1,
+                  ),
                 ],
               ),
-              const SizedBox(height: 80),
-              _isBreaking
-                  ? IconButton(
-                      onPressed: () {},
-                      iconSize: 120,
-                      icon: const Icon(
-                        Icons.airline_seat_recline_extra,
-                      ),
-                    )
-                  : Row(
-                      children: [
-                        const Spacer(),
-                        IconButton(
-                          iconSize: 120,
-                          onPressed: _isRunning
-                              ? () => _handlePause()
-                              : () => _handleStart(),
-                          icon: Icon(
-                            _isRunning ? Icons.pause_circle : Icons.play_circle,
-                          ),
-                        ),
-                        _isRunning
-                            ? const Spacer()
-                            : Expanded(
-                                child: IconButton(
-                                  iconSize: 48,
-                                  onPressed: _resetTimer,
-                                  icon: const Icon(Icons.restore),
-                                ),
-                              ),
-                      ],
-                    ),
-              const SizedBox(height: 40),
-              DefaultTextStyle(
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Column(
-                      children: [
-                        Text(
-                          '$_finishedRound/4',
-                          style: TextStyle(
-                            color: Colors.amber.shade100,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'ROUND',
-                        ),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        Text(
-                          '$_finishedGoal/12',
-                          style: TextStyle(
-                            color: Colors.amber.shade100,
-                          ),
-                        ),
-                        const Text('GOAL'),
-                      ],
-                    ),
-                  ],
-                ),
-              )
-            ],
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class makeMovies extends StatelessWidget {
+  final double aspectRatio;
+  const makeMovies({
+    Key? key,
+    required this.movies,
+    required this.aspectRatio,
+  }) : super(key: key);
+
+  final Future<List<MovieModel>> movies;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: movies,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return SizedBox(
+            width: MediaQuery.of(context).size.width,
+            height: 180,
+            child: ListView.separated(
+              itemCount: snapshot.data!.length,
+              scrollDirection: Axis.horizontal,
+              itemBuilder: (context, index) {
+                var movie = snapshot.data![index];
+                return AspectRatio(
+                  aspectRatio: aspectRatio,
+                  child: Container(
+                    clipBehavior: Clip.hardEdge,
+                    decoration: BoxDecoration(
+                      color: ColorPalette.green,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    width: 80,
+                    child: FadeInImage.assetNetwork(
+                      placeholder: 'assets/placeholder.jpeg',
+                      placeholderFit: BoxFit.cover,
+                      image:
+                          'https://image.tmdb.org/t/p/w500/${movie.poster_path}',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                );
+              },
+              separatorBuilder: (context, index) => const SizedBox(
+                width: 24,
+              ),
+            ),
+          );
+        } else {
+          return const SizedBox(
+            height: 180,
+            child: Center(
+              child: Text(
+                'Loading...',
+                style: TextStyle(fontSize: 20),
+              ),
+            ),
+          );
+        }
+      },
     );
   }
 }
