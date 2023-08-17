@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,10 +17,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.dark,
         appBarTheme: const AppBarTheme(
-          color: Colors.amber,
+          // color: Colors.amber,
           elevation: 0,
         ),
-        scaffoldBackgroundColor: Colors.amber,
+        // scaffoldBackgroundColor: Colors.amber,
       ),
       home: const MyWidget(),
     );
@@ -95,7 +96,7 @@ class _MyWidgetState extends State<MyWidget> {
   void _startBreakTime() {
     _isBreaking = true;
     _breakTimer = Timer.periodic(
-      const Duration(milliseconds: 10),
+      const Duration(milliseconds: 20),
       _handleBreakTick,
     );
   }
@@ -245,11 +246,12 @@ class _MyWidgetState extends State<MyWidget> {
               ),
               const SizedBox(height: 80),
               _isBreaking
-                  ? IconButton(
-                      onPressed: () {},
-                      iconSize: 120,
-                      icon: const Icon(
-                        Icons.airline_seat_recline_extra,
+                  ? SizedBox(
+                      // color: Colors.white,
+                      width: 136,
+                      height: 136,
+                      child: Lottie.asset(
+                        'assets/coffee-break.json',
                       ),
                     )
                   : Row(
