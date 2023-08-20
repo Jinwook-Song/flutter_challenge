@@ -9,6 +9,7 @@ class MovieDetail extends StatefulWidget {
   final String title, backdropPath, overview;
   final int id;
   final num voteAverage;
+  final String movieType;
 
   const MovieDetail({
     super.key,
@@ -17,6 +18,7 @@ class MovieDetail extends StatefulWidget {
     required this.overview,
     required this.id,
     required this.voteAverage,
+    required this.movieType,
   });
 
   @override
@@ -30,6 +32,7 @@ class _MovieDetailState extends State<MovieDetail> {
   late final bool hasHalfStar;
 
   late final Future<MovieGenreModel> genres;
+  late final NetworkImage networkImage;
 
   void _backToHome(BuildContext context) {
     Navigator.of(context).pop();
@@ -39,6 +42,7 @@ class _MovieDetailState extends State<MovieDetail> {
   void initState() {
     super.initState();
     genres = ApiService.getMovie(widget.id);
+    networkImage = NetworkImage(widget.backdropPath);
     fullStar = (widget.voteAverage / 2).floor();
     hasHalfStar = (widget.voteAverage / 2 - fullStar).round() == 1;
   }
@@ -51,11 +55,14 @@ class _MovieDetailState extends State<MovieDetail> {
           Positioned(
             child: Opacity(
               opacity: 0.3,
-              child: Image.network(
-                widget.backdropPath,
-                fit: BoxFit.cover,
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height,
+              child: Hero(
+                tag: '${widget.movieType}_${widget.id}',
+                child: Image(
+                  image: networkImage,
+                  fit: BoxFit.cover,
+                  width: MediaQuery.of(context).size.width,
+                  height: MediaQuery.of(context).size.height,
+                ),
               ),
             ),
           ),
@@ -141,6 +148,8 @@ class _MovieDetailState extends State<MovieDetail> {
                                     .toString()
                                     .replaceAll('(', '')
                                     .replaceAll(')', ''),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   color: isGreen
                                       ? ColorPalette.accentGreen

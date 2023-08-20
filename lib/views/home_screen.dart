@@ -51,6 +51,7 @@ class _HomeState extends State<Home> {
                   MovieCards(
                     movies: popularMovies,
                     aspectRatio: 16 / 9,
+                    movieType: MovieType.popular,
                   ),
                   const SizedBox(height: 24),
                   const Text(
@@ -63,6 +64,7 @@ class _HomeState extends State<Home> {
                   MovieCards(
                     movies: nowPlayingMovies,
                     aspectRatio: 1,
+                    movieType: MovieType.nowPlaying,
                   ),
                   const SizedBox(height: 24),
                   const Text(
@@ -75,6 +77,7 @@ class _HomeState extends State<Home> {
                   MovieCards(
                     movies: comingSoonMovies,
                     aspectRatio: 1,
+                    movieType: MovieType.comingSoon,
                   ),
                 ],
               ),

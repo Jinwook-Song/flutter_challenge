@@ -5,10 +5,12 @@ import 'package:flutter_challenge/views/movie_detail_screen.dart';
 
 class MovieCards extends StatelessWidget {
   final double aspectRatio;
+  final String movieType;
   const MovieCards({
     Key? key,
     required this.movies,
     required this.aspectRatio,
+    required this.movieType,
   }) : super(key: key);
 
   final Future<List<MovieModel>> movies;
@@ -22,6 +24,7 @@ class MovieCards extends StatelessWidget {
           overview: movie.overview,
           voteAverage: movie.voteAverage,
           backdropPath: '${ApiService.baseImageUrl}${movie.backdropPath}',
+          movieType: movieType,
         ),
       ),
     );
@@ -43,21 +46,24 @@ class MovieCards extends StatelessWidget {
                 var movie = snapshot.data![index];
                 return GestureDetector(
                   onTap: () => _onMovieTap(context, movie),
-                  child: AspectRatio(
-                    aspectRatio: aspectRatio,
-                    child: Container(
-                      clipBehavior: Clip.hardEdge,
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      width: 80,
-                      child: FadeInImage.assetNetwork(
-                        placeholder: 'assets/placeholder.jpeg',
-                        placeholderFit: BoxFit.cover,
-                        image:
-                            'https://image.tmdb.org/t/p/w500/${movie.posterPath}',
-                        fit: BoxFit.cover,
+                  child: Hero(
+                    tag: '${movieType}_${movie.id}',
+                    child: AspectRatio(
+                      aspectRatio: aspectRatio,
+                      child: Container(
+                        clipBehavior: Clip.hardEdge,
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        width: 80,
+                        child: FadeInImage.assetNetwork(
+                          placeholder: 'assets/placeholder.jpeg',
+                          placeholderFit: BoxFit.cover,
+                          image:
+                              'https://image.tmdb.org/t/p/w500/${movie.backdropPath}',
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),
