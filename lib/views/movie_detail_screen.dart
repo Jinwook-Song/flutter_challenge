@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_challenge/constants/color_palette.dart';
 import 'package:flutter_challenge/models/movie_model.dart';
@@ -26,8 +24,6 @@ class MovieDetail extends StatefulWidget {
 }
 
 class _MovieDetailState extends State<MovieDetail> {
-  bool isGreen = Random().nextBool();
-
   late final int fullStar;
   late final bool hasHalfStar;
 
@@ -54,7 +50,7 @@ class _MovieDetailState extends State<MovieDetail> {
         children: [
           Positioned(
             child: Opacity(
-              opacity: 0.3,
+              opacity: 0.1,
               child: Hero(
                 tag: '${widget.movieType}_${widget.id}',
                 child: Image(
@@ -76,22 +72,18 @@ class _MovieDetailState extends State<MovieDetail> {
                     contentPadding: EdgeInsets.zero,
                     leading: IconButton(
                       onPressed: () => _backToHome(context),
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.chevron_left,
                         size: 36,
-                        color: isGreen
-                            ? ColorPalette.accentGreen
-                            : ColorPalette.accentPink,
+                        color: ColorPalette.accentPink,
                       ),
                     ),
                     title: Text(
                       widget.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: isGreen
-                            ? ColorPalette.accentGreen
-                            : ColorPalette.accentPink,
+                      style: const TextStyle(
+                        color: ColorPalette.accentPink,
                         fontSize: 24,
                         height: 1.5,
                         fontWeight: FontWeight.w600,
@@ -101,10 +93,8 @@ class _MovieDetailState extends State<MovieDetail> {
                   const SizedBox(height: 180),
                   Text(
                     widget.title,
-                    style: TextStyle(
-                      color: isGreen
-                          ? ColorPalette.accentPink
-                          : ColorPalette.accentGreen,
+                    style: const TextStyle(
+                      color: ColorPalette.accentGreen,
                       fontSize: 36,
                       fontWeight: FontWeight.w600,
                     ),
@@ -135,10 +125,8 @@ class _MovieDetailState extends State<MovieDetail> {
                           children: [
                             Text(
                               '${hour}h ${min}min | ',
-                              style: TextStyle(
-                                color: isGreen
-                                    ? ColorPalette.accentGreen
-                                    : ColorPalette.accentPink,
+                              style: const TextStyle(
+                                color: ColorPalette.accentGreen,
                               ),
                             ),
                             Expanded(
@@ -150,26 +138,25 @@ class _MovieDetailState extends State<MovieDetail> {
                                     .replaceAll(')', ''),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: isGreen
-                                      ? ColorPalette.accentGreen
-                                      : ColorPalette.accentPink,
+                                style: const TextStyle(
+                                  color: ColorPalette.accentGreen,
                                 ),
                               ),
                             ),
                           ],
                         );
                       }
-                      return const Text('Loading...');
+                      return const Text(
+                        'Loading...',
+                        style: TextStyle(color: Colors.amber),
+                      );
                     },
                   ),
                   const SizedBox(height: 48),
-                  Text(
+                  const Text(
                     'Sotryline',
                     style: TextStyle(
-                      color: isGreen
-                          ? ColorPalette.accentPink
-                          : ColorPalette.accentGreen,
+                      color: ColorPalette.accentPink,
                       fontSize: 36,
                       fontWeight: FontWeight.w600,
                     ),
@@ -179,13 +166,11 @@ class _MovieDetailState extends State<MovieDetail> {
                     widget.overview,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       height: 1.5,
-                      color: isGreen
-                          ? ColorPalette.accentGreen
-                          : ColorPalette.accentPink,
+                      color: ColorPalette.accentPink,
                     ),
                   ),
                 ],
@@ -199,7 +184,7 @@ class _MovieDetailState extends State<MovieDetail> {
               width: MediaQuery.of(context).size.width * 0.7,
               height: 60,
               decoration: BoxDecoration(
-                  color: isGreen ? ColorPalette.pink : ColorPalette.green,
+                  color: ColorPalette.pink,
                   borderRadius: BorderRadius.circular(12)),
               child: const Center(
                 child: Text(

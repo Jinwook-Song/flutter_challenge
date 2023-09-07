@@ -69,9 +69,11 @@ class MovieCards extends StatelessWidget {
                   ),
                 );
               },
-              separatorBuilder: (context, index) => const SizedBox(
-                width: 24,
-              ),
+              separatorBuilder: (context, index) {
+                return const SizedBox(
+                  width: 24,
+                );
+              },
             ),
           );
         } else {

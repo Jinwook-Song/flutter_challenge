@@ -57,8 +57,7 @@ class _HomeState extends State<Home> {
                   const Text(
                     '▲ Now in Cinemas',
                     style: TextStyle(
-                      fontSize: 30,
-                    ),
+                        fontSize: 30, color: ColorPalette.accentGreen),
                   ),
                   const SizedBox(height: 24),
                   MovieCards(
